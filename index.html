@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Demostración de Funciones en JavaScript</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <main>
+
+        <h1>Demostración de JavaScript</h1>
+
+
+        <section class="bloque" aria-labelledby="titulo1">
+            <h2 id="titulo1">1. Desplegar u ocultar un menú</h2>
+            <button id="btnMenu" aria-expanded="false" aria-controls="listaMenu">Mostrar / Ocultar Menú</button>
+            <ul id="listaMenu" class="oculto">
+                <li>Inicio</li>
+                <li>Transferencias</li>
+                <li>Cerrar sesión</li>
+            </ul>
+        </section>
+
+
+        <section class="bloque" aria-labelledby="titulo2">
+            <h2 id="titulo2">2. Contador de clics (Scope y Variables)</h2>
+            <button id="btnContador">Registrar clic</button>
+            <p>Total de clics realizados: <strong id="textoContador" class="cifra" aria-live="polite">0</strong></p>
+        </section>
+
+
+        <section class="bloque" aria-labelledby="titulo3">
+            <h2 id="titulo3">3. Captura de datos y visualización de mensaje</h2>
+            <label for="inputNombre">Nombre</label>
+            <div class="fila">
+                <input type="text" id="inputNombre" placeholder="Escribe tu nombre" autocomplete="given-name">
+                <button id="btnSaludar">Mostrar mensaje</button>
+            </div>
+            <p id="textoSaludo" class="estado" role="status"></p>
+        </section>
+
+
+        <section class="bloque" aria-labelledby="titulo4">
+            <h2 id="titulo4">4. Validación de Pago Móvil (Funciones Asíncronas)</h2>
+            <p class="saldo"><span class="saldo-etiqueta">Saldo disponible en cuenta</span><span class="cifra">$<span
+                        id="textoSaldo">500</span></span></p>
+            <label for="inputMonto">Monto a transferir</label>
+            <div class="fila">
+                <input type="number" id="inputMonto" placeholder="Monto a transferir" inputmode="decimal" min="0"
+                    step="any">
+                <button id="btnTransferir">Enviar Pago Móvil</button>
+            </div>
+            <p id="textoEstado" class="estado" role="status"></p>
+        </section>
+
+    </main>
+
+    <script>
+
+        // bloque 1: menú desplegable; me mato 
+        const btnMenu = document.getElementById("btnMenu");
+        const listaMenu = document.getElementById("listaMenu");
+
+        btnMenu.addEventListener("click", () => {
+            const oculto = listaMenu.classList.toggle("oculto");
+            btnMenu.setAttribute("aria-expanded", String(!oculto));
+        });
+
+
+        // bloque 2: contador de clics; esto es pa mostrar lo del let que puede cambiar de valor babe
+        let contador = 0;
+        const btnContador = document.getElementById("btnContador");
+        const textoContador = document.getElementById("textoContador");
+
+        btnContador.addEventListener("click", () => {
+            contador++;
+            textoContador.textContent = contador;
+        });
+
+
+
+
+        // bloque 3: saludo; lee el input, valida que no esté vacío y muestra el mensaje, noma eso
+        const inputNombre = document.getElementById("inputNombre");
+        const btnSaludar = document.getElementById("btnSaludar");
+        const textoSaludo = document.getElementById("textoSaludo");
+
+        function mostrarSaludo(tipo, mensaje) {
+            textoSaludo.dataset.tipo = tipo;
+            textoSaludo.textContent = mensaje;
+        }
+
+        btnSaludar.addEventListener("click", () => {
+            const nombre = inputNombre.value.trim();
+
+            if (nombre === "") {
+                mostrarSaludo("error", "Por favor, ingresa un nombre antes de continuar.");
+            } else {
+                mostrarSaludo("ok", "Hola, " + nombre + ". El evento del botón se ejecutó correctamente.");
+            }
+        });
+
+        inputNombre.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                btnSaludar.click();
+            }
+        });
+
+
+        // bloque 4: Pago Móvil; valida el monto y simula con async/await la respuesta del banco (1 s), obviamente
+        // todo esto es simulado porque no pienso hacer más lógica,, los odio a todos (cualquiera, los amo)
+        let saldoDisponible = 500;
+        const textoSaldo = document.getElementById("textoSaldo");
+        const inputMonto = document.getElementById("inputMonto");
+        const btnTransferir = document.getElementById("btnTransferir");
+        const textoEstado = document.getElementById("textoEstado");
+
+        function mostrarEstado(tipo, mensaje) {
+            textoEstado.dataset.tipo = tipo;
+            textoEstado.textContent = mensaje;
+        }
+
+
+        btnTransferir.addEventListener("click", async () => {
+            const monto = Number(inputMonto.value);
+
+            if (monto <= 0 || isNaN(monto)) {
+                mostrarEstado("error", "Error: Ingresa un monto numérico válido mayor a cero.");
+                return;
+            }
+
+            if (monto > saldoDisponible) {
+                mostrarEstado("error", "Error: Fondos insuficientes para realizar la operación.");
+                return;
+            }
+
+            btnTransferir.disabled = true;
+            btnTransferir.setAttribute("aria-busy", "true");
+            mostrarEstado("info", "Procesando transacción con el banco...");
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            saldoDisponible = saldoDisponible - monto;
+            textoSaldo.textContent = saldoDisponible;
+            mostrarEstado("ok", "Transacción aprobada. Se descontaron $" + monto + " de su cuenta.");
+            inputMonto.value = "";
+            btnTransferir.disabled = false;
+            btnTransferir.removeAttribute("aria-busy");
+        });
+
+        inputMonto.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                btnTransferir.click();
+            }
+        });
+    </script>
+
+</body>
+
+</html>
